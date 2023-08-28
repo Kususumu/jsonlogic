@@ -62,7 +62,8 @@ func unary(operator string, value interface{}) interface{} {
 		return !b
 	}
 
-	return b
+	// return nil as invalid operator
+	return nil
 }
 
 func _and(values []interface{}) interface{} {
