@@ -150,7 +150,6 @@ func operation(operator string, values, data interface{}) interface{} {
 		return equals(parsed[0], parsed[1])
 	}
 
-	panic(ErrInvalidOperator{
-		operator: operator,
-	})
+	// ignore invalid operator
+	return nil
 }
