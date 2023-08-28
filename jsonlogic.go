@@ -281,7 +281,7 @@ func setProperty(value, data interface{}) interface{} {
 	property := _value[1].(string)
 	modified, err := copystructure.Copy(object)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	_modified := modified.(map[string]interface{})
