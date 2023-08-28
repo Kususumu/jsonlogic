@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -455,9 +456,15 @@ func TestMissingOperators(t *testing.T) {
 		},
 	}
 
-	_, err := ApplyInterface(rule, nil)
+	result, err := ApplyInterface(rule, nil)
 
-	assert.EqualError(t, err, "The operator \"sum\" is not supported")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if result != nil {
+		t.Error()
+	}
 }
 
 func TestZeroDivision(t *testing.T) {
@@ -791,4 +798,39 @@ func TestJsonLogicWithSolvedVars(t *testing.T) {
 	}`
 
 	assert.JSONEq(t, expected, string(output))
+}
+
+func TestAndOrWithInvalidOperator(t *testing.T) {
+	testCases := []struct {
+		name      string
+		rule      string
+		isMatched bool
+	}{
+		{"and default true match", `{"and": [{"InvalidOperator1" : ""}, true] }`, true},
+		{"and default false match", `{"and": [{"InvalidOperator1" : ""}, false] }`, false},
+		{"and three value", `{"and": [{"InvalidOperator1" : ""}, true, false] }`, false},
+		{"or default false match", `{"or": [{"InvalidOperator1" : ""}, false] }`, false},
+		{"or three value", `{"or": [{"InvalidOperator1" : ""}, false, true] }`, true},
+		{"multiple invalid", `{"or": [{"InvalidOperator1" : ""},{"InvalidOperator2" : ""}, false, true] }`, true},
+		{"invalid object", `{"or": [{"InvalidOperator1" : {"123":""}},{"InvalidOperator2" : ""}, false, true] }`, true},
+		{"invalid array", `{"or": [{"InvalidOperator1" : [true, false]},{"InvalidOperator2" : ""}, false, true] }`, true},
+	}
+
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rule := json.RawMessage(tc.rule)
+
+			result, err := ApplyRaw(rule, nil)
+			if err != nil {
+				t.Error(i, err)
+			}
+			isMatched, err := strconv.ParseBool(string(result))
+			if err != nil {
+				t.Error(i, err)
+			}
+			if isMatched != tc.isMatched {
+				t.Error(i)
+			}
+		})
+	}
 }
